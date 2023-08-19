@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <link
+            rel="stylesheet"
+            href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css"
+        />
+        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/wasm.min.js"></script>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+            crossorigin="anonymous"
+        />
+    </head>
+
+    <body>
+        <div class="container-fluid">
+            <button onclick="callMain()" class="btn btn-primary m-4">
+                Run the analysis
+            </button>
+            <button onclick="clear_()" class="btn btn-primary m-4">
+                Clear
+            </button>
+
+            <a href="index.html">Resultats</a>
+        </div>
+
+         <div>
+            <div>
+                Time for instrumented code :<span id="time_instr">(not run)</span> ms
+            </div>
+            <div>
+                Time for not instrumented code :<span id="time_no_instr">(not run)</span> ms
+            </div>
+            <div>
+                Ratio (instr/not instr):<span id="time_diff">(not run)</span> x
+            </div>
+        </div>
+
+        <script type="text/javascript" src="/src/wat/api.js"></script>
+        <script type="text/javascript" src="FILENAME_TEST.wasabi.js"></script>
+        <!-- <script type="text/javascript" src="FILENAME_TEST.js"></script> -->
+        <script
+            type="text/javascript"
+            src="/src/analyses/taint_analysis.js"
+        ></script>
+        <script type="text/javascript">
+            function output(...string) {
+                document.getElementById("output").innerHTML += [...string];
+            }
+            function clear_() {
+                document.getElementById("console").innerHTML = "";
+                console.clear();
+                get_taint_analysis(Wasabi); // reset
+            }
+
+            
+
+            // "async main"
+            async function callMain() {
+               
+                api.memory = new WebAssembly.Memory({ initial:256, maximum:256 });
+
+                let importObject = {
+                    imports: {
+                        output,
+                    },
+                    env: api
+                };
+
+                var time_tested = 50;
+
+                var time_diff = 0;
+
+                var time_instr = 0;
+                var time_no_instr = 0;
+
+                let {module2, instance2} = await fetch("FILENAME_ORI.wasm")
+                // let { module, instance } = await fetch("simple_intr.wasm")
+                	.then(response => response.arrayBuffer())
+                	.then(async (arrayBuffer) => {
+                        let {module, instance} = await WebAssembly.instantiate(arrayBuffer, importObject);
+                        // Analysis.exports = instance.exports;             
+                        api.malloc = instance.exports.malloc;
+                        api.free = instance.exports.free;
+                        for (let index = 0; index < time_tested; index++) {
+                            var start = window.performance.now();
+                            instance.exports.init();
+                            var end = window.performance.now();
+                            time_no_instr += end - start;
+                        }
+                        time_no_instr /= time_tested
+                        console.log(`Execution time instrumented: ${time_no_instr} ms`);
+                        document.getElementById("time_no_instr").innerHTML = time_no_instr.toFixed(5);
+                        return {module, instance};
+                });
+                
+
+                let {module, instance} = await fetch("FILENAME_TEST.wasm")
+                // let { module, instance } = await fetch("simple_intr.wasm")
+                	.then(response => response.arrayBuffer())
+                	.then(async (arrayBuffer) => {
+                        let {module, instance} = await WebAssembly.instantiate(arrayBuffer, importObject);
+                        // Analysis.exports = instance.exports;             
+                        api.malloc = instance.exports.malloc;
+                        api.free = instance.exports.free;
+                        for (let index = 0; index < time_tested; index++) {
+                            var start = window.performance.now();
+                            instance.exports.init();
+                            var end = window.performance.now();
+                            time_instr += end - start;
+                        }
+                        time_instr /= time_tested
+                        console.log(`Execution time instrumented: ${time_instr} ms`);
+                        document.getElementById("time_instr").innerHTML = time_instr.toFixed(5);
+                        return {module, instance};
+                    });
+
+                time_diff += (time_instr/time_no_instr);
+                console.log("Time diff", time_diff);
+                document.getElementById("time_diff").innerHTML = time_diff.toFixed(5);
+             
+                
+                Analysis.exports = instance.exports;
+
+            };
+
+            Analysis.stack = get_taint_analysis(Wasabi);
+
+            callMain();
+
+        </script>
+        <script
+            src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"
+        ></script>
+    </body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/wasm.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous" />
+</head>
+
+<body>
+    <div class="container-fluid">
+        <button onclick="run()" class="btn btn-primary m-4">
+            Run the analysis
+        </button>
+        <button onclick="clear_()" class="btn btn-primary m-4">
+            Clear
+        </button>
+        <input type="checkbox" text="debug" id="debug" />
+        <label for="debug">debug</label>
+
+        <a href="index_perf.html">Performance</a>
+    </div>
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm">
+                    <div class="container">
+                        <h1 class="border border-3 rounded border-dark-subtle">
+                            <a
+                                type="button"
+                                data-toggle="collapse"
+                                data-target="#collapseSouceC"
+                                aria-expanded="false"
+                                aria-controls="collapseSouceC"
+                                >Source</a
+                            >
+                        </h1>
+                        <div class="collapse" id="collapseSouceC">
+                            <div class="card card-body">
+                                <pre><code class="language-wasm" id="source"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm">
+                    <div class="container-fluid">
+                        <h1 class="border border-3 rounded border-dark-subtle">
+                            <a
+                                type="button"
+                                data-toggle="collapse"
+                                data-target="#collapseSourceHook"
+                                aria-expanded="false"
+                                aria-controls="collapseSourceHook"
+                                >Source with hook</a
+                            >
+                        </h1>
+                        <div class="collapse" id="collapseSourceHook">
+                            <div class="card card-body">
+                                <pre><code class="language-wasm" id="source_hook"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm">
+                    <div class="container-fluid">
+                        <h1 class="border border-3 rounded border-dark-subtle">
+                            <a
+                                type="button"
+                                data-toggle="collapse"
+                                data-target="#collapseSourceOutput"
+                                aria-expanded="false"
+                                aria-controls="collapseSourceOutput"
+                                >Output</a
+                            >
+                        </h1>
+                        <div class="collapse" id="collapseSourceOutput">
+                            <div class="card card-body">
+                                <pre><code id="output"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm">
+                    <div class="container-fluid">
+                        <h1 class="border border-3 rounded border-dark-subtle">
+                            <a
+                                type="button"
+                                data-toggle="collapse"
+                                data-target="#collapseConsole"
+                                aria-expanded="false"
+                                aria-controls="collapseConsole"
+                                >Console</a
+                            >
+                        </h1>
+                        <div class="collapse" id="collapseConsole">
+                            <div class="card card-body">
+                                <pre><code class="language-plaintext" id="console"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <script type="text/javascript" src="FILENAME_TEST.wasabi.js"></script>
+    <script type="text/javascript" src="/src/analyses/FILENAME_ANALYSIS.js"></script>
+    <script type="text/javascript" src="/src/wat/api.js"></script>
+    <script type="text/javascript">
+        const otherCheckbox = document.getElementById("debug");
+        otherCheckbox.addEventListener("change", () => {
+            if (otherCheckbox.checked) {
+                Analysis.option.debug.enable = true;
+            } else {
+                Analysis.option.debug.enable = false;
+            }
+        });
+        function clear_() {
+            document.getElementById("console").innerHTML = "";
+            console.clear();
+            get_taint_analysis(Wasabi); // reset
+        }
+
+        function output(string) {
+            document.getElementById("output").innerHTML += string;
+        }
+        
+
+        /*
+        const oldLog = console.log;
+        console.log = (...arg) => {
+            let cons = document.getElementById("console");
+            cons.innerHTML += "<div>";
+            for (const ele of arg) {
+                cons.innerHTML += `<span>${ele}</span>`;
+            }
+            cons.innerHTML += "</div>";
+            return oldLog(...arg);
+        }*/
+
+        var wasm = {};
+
+        api.memory = new WebAssembly.Memory({ initial:256, maximum:256 });
+
+        let importObject = {
+            imports: {
+                output,
+            },
+            // api: api,
+            console: {
+                log: console.log,
+            },
+            env: api,
+        };
+
+        // "async main"
+        (async function () {
+            document.getElementById("source").innerHTML = await fetch(
+                "/DIRECTORY_WAT/FILENAME_TEST.wat"
+            ).then((response) => response.text());
+            document.getElementById("source_hook").innerHTML = await fetch(
+                "FILENAME_TEST_instr.wat"
+            ).then((response) => response.text());
+            hljs.configure({ ignoreUnescapedHTML: true });
+            hljs.highlightAll();
+        })();
+
+        async function run() {
+            let { module, instance } = await fetch("FILENAME_INSTR.wasm")
+                .then((response) => response.arrayBuffer())
+                .then((arrayBuffer) =>
+                    WebAssembly.instantiate(arrayBuffer, importObject)
+                );
+
+            wasm = instance.exports;
+            // instance.exports.main();
+        }
+        option.alert.enable = true;
+        Analysis.stack = get_taint_analysis(Wasabi);
+            // run();
+    </script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

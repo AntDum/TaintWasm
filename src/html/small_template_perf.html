@@ -1,0 +1,10 @@
+<tr>
+    <th scope="row"><a href="/*NAME*/_out">/*NAME*/</a></th>
+    <td><span id="/*NAME*/_time_diff"></span></td>
+</tr>
+/*=====*/
+        await loadTest("/*PATHWASABI*/", "/*PATHWASM*/", "/*PATHWASMORI*/", "/*WASABNAME*/", (a) => {
+            document.getElementById("/*NAME*/_time_diff").innerHTML = a; 
+        }); 
+        await new Promise(resolve => setTimeout(() => { console.info('Finished : /*NAME*/'); return resolve(); }, 100));
+

@@ -1,0 +1,16 @@
+<tr>
+    <th scope="row"><a href="/*NAME*/_out">/*NAME*/</a></th>
+    <td><span id="/*NAME*/_clean" /*STYLE_CLEAN*/>Clean</span></td>
+    <td><span id="/*NAME*/_explicit" /*STYLE_EXPLICIT*/></span></td>
+    <td><span id="/*NAME*/_implicit" /*STYLE_IMPLICIT*/></span></td>
+    <td><span id="/*NAME*/_potential" /*STYLE_POTENTIAL*/></span></td>
+</tr>
+/*=====*/
+        await loadTest("/*PATHWASABI*/", "/*PATHWASM*/", (a) => {
+            document.getElementById("/*NAME*/_clean").innerHTML = ""; 
+            if (a[0]) { document.getElementById("/*NAME*/_explicit").innerHTML += "Explicit"; } 
+            if (a[1]) { document.getElementById("/*NAME*/_implicit").innerHTML += "Implicit"; }
+            if (a[2]) { document.getElementById("/*NAME*/_potential").innerHTML += "Potential"; }
+        }); 
+        await new Promise(resolve => setTimeout(() => { console.info('Finished : /*NAME*/'); return resolve(); }, 100));
+
