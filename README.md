@@ -9,6 +9,22 @@ git clone https://github.com/AntDum/taintTheWasabi.git
 cd taintTheWasabi
 ```
 
+### Build the test
+
+Only on linux
+
+#### Dependencies
+
+- WebAssembly Binary Toolkit (WABT): <https://github.com/WebAssembly/wabt>. `wasm2wat`/`wat2wasm`
+- Wasabi: <https://github.com/danleh/wasabi>. `wasabi`
+- Emscripten: <https://emscripten.org>. `emcc`
+
+#### Build
+
+```bash
+make all
+```
+
 ### Running it
 
 In the *taintTheWasabi* folder
@@ -38,18 +54,4 @@ For the other it does nothing and is only there for simplisity
 
 On each test page and in the unit test table, you'll find a performance section that displays the execution times. This section also includes a comparison between instrumented and non-instrumented scenarios.
 
-### Build the test
 
-Only on linux
-
-#### Dependencies
-
-- WebAssembly Binary Toolkit (WABT): <https://github.com/WebAssembly/wabt>. `wasm2wat`/`wat2wasm`
-- Wasabi: <https://github.com/danleh/wasabi>. `wasabi`
-- Emscripten: <https://emscripten.org>. `emcc`
-
-#### Build
-
-```bash
-make all
-```
