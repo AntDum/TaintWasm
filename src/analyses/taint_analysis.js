@@ -117,31 +117,32 @@ function deepCopy(object) {
 
 class Stack {
     constructor() {
-        this.stack = [
+        this.stack = [                      // Contains all the function scope
             // a function scope
             {
-                blocks: [],
+                blocks: [],                 // Contains of the blocks scope
                 // a block scope
                 // { 
-                //  blockTaint : Taint
-                         //  values : []
-                //  breaking : bool
+                //  blockTaint : Taint      // Is the taint of the block (to propagate to the value)
+                //  values : []    // Contains the taint for all the value of the block
+                //  breaking : bool         // Use to know if the block has been break
                 // }
-                locals: [],
-                funcIdx: -1,
-                fromFuncIdx: -2,
+                locals: [],                 // Contains the taint of all the locals
+                funcIdx: -1,                // The idx of the current function
+                fromFuncIdx: -2,            // The idx of the caller function
             },
         ]
-        this.memory = [];
-        this.globals = [];
+        this.memory = [];                   // Contains the taint for all the memory
+        this.globals = [];                  // Contains the taint of all the globals
 
-        this.historyValue = null;
-        this.blockHistory = [];
+        this.historyValue = null;           // Last value poped (used for the if)
+        this.blockHistory = [];             // To have access to the taint of the multilst last block
+        // even without being in the same funvtion
 
-        this.savedScopeBeforeReturn = null;
-        this.lastFuncToBePop = null;
-        this.lastFuncIdxToBePop = -1;
-        this.idxFromTheSavedScope = -1;
+        this.savedScopeBeforeReturn = null; // The block scope of the last function pop
+        this.lastFuncToBePop = null;        // The function scope of the last function pop
+        this.lastFuncIdxToBePop = -1;       // The function idx of the last pop
+        this.idxFromTheSavedScope = -1;     // The function idx of the last pop/peek
     }
     //==================================================//
     //============ Block Taint helpers =================//
